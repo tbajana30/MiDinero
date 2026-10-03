@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Dinero">
+<meta name="theme-color" content="#0066cc">
+<link rel="apple-touch-icon" href="/icon.png">
+<title>Mi Dinero</title>
+<style>
+:root {
+  --primary: #0066cc;
+  --primary-dark: #004fa3;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --border: #e0e6ed;
+  --text: #1a1a1a;
+  --text-muted: #666666;
+  --text-light: #999999;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+#fecha {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+
+nav button {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+nav button.on {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 100px;
+}
+
+.grid { display: grid; gap: 20px; }
+.cols2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.cols3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.card h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.card.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  border: none;
+}
+
+.card.hero h3 { color: rgba(255, 255, 255, 0.9); }
+.card.hero .sub { color: rgba(255, 255, 255, 0.85); }
+
+.big { font-size: 36px; font-weight: 700; margin: 8px 0; }
+.mid { font-size: 24px; font-weight: 700; margin: 6px 0; }
+
+.pos { color: var(--success); }
+.neg { color: var(--danger); }
+.warn { color: var(--warning); }
+
+.card.hero .pos, .card.hero .neg, .card.hero .warn { color: #ffffff; }
+
+.sub { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.row:last-child { border-bottom: none; }
+.row .l { min-width: 0; flex: 1; }
+.row .name { font-weight: 600; font-size: 15px; }
+.row .det { color: var(--text-light); font-size: 12px; margin-top: 2px; }
+.row .amt { font-weight: 700; white-space: nowrap; }
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.tag.green { background: #e8f5e9; color: var(--success); }
+.tag.orange { background: #fff3e0; color: var(--warning); }
+.tag.red { background: #ffebee; color: var(--danger); }
+.tag.gray { background: #f5f5f5; color: var(--text-light); }
+
+.bar {
+  background: var(--bg);
+  border-radius: 12px;
+  height: 8px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.bar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #00b4d8);
+  border-radius: 12px;
+  transition: width 0.4s ease;
+}
+
+.catbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.catbar .cname { width: 120px; font-size: 13px; color: var(--text); flex-shrink: 0; font-weight: 500; }
+.catbar .ctrack { flex: 1; background: var(--bg); height: 12px; border-radius: 6px; overflow: hidden; }
+.catbar .ctrack > div { height: 100%; border-radius: 6px; }
+.catbar .cval { width: 100px; text-align: right; font-size: 13px; font-weight: 600; flex-shrink: 0; color: var(--text); }
+
+.empty { color: var(--text-light); font-size: 14px; padding: 20px 0; text-align: center; }
+.mt { margin-top: 24px; }
+.flexh { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.hidden { display: none; }
+
+form.add {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+label.f {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+input, select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 14px;
+  width: 100%;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.btn {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+}
+
+.btn.sec {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn.sec:hover {
+  background: #f0f2f5;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn.mini { padding: 6px 10px; font-size: 12px; }
+
+#pinlock {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+#pinlock.hidden { display: none; }
+
+#pinlock .card {
+  background: #ffffff;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+#pin-input {
+  text-align: center;
+  font-size: 28px;
+  letter-spacing: 12px;
+  margin-top: 12px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+#pin-err { color: var(--danger); font-size: 13px; margin-top: 8px; }
+
+.monthnav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.monthnav b {
+  min-width: 160px;
+  text-align: center;
+  text-transform: capitalize;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  main { padding: 16px 12px 80px; }
+  .big { font-size: 28px; }
+  .cols2, .cols3 { grid-template-columns: 1fr; }
+  form.add { grid-template-columns: 1fr; }
+  header { flex-direction: column; gap: 8px; align-items: flex-start; }
+  nav { border-top: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mi Dinero</h1>
+  <div id="fecha"></div>
+</header>
+
+<nav>
+  <button data-t="resumen" class="on">Resumen</button>
+  <button data-t="movs">Movimientos</button>
+  <button data-t="pagos">Pagos fijos</button>
+  <button data-t="deudas">Deudas</button>
+  <button data-t="metas">Metas</button>
+  <button data-t="ajustes">Ajustes</button>
+</nav>
+
+<main>
+  <section id="t-resumen">
+    <div class="grid cols2">
+      <div class="card hero">
+        <h3>Dinero disponible</h3>
+        <div class="big" id="r-cuentas">—</div>
+        <div class="sub">Lo que puedes gastar<button class="btn sec mini" onclick="ajustarCuentas()" style="margin-left:8px">Ajustar</button></div>
+      </div>
+      
+      <div class="card">
+        <h3>Puedes gastar este mes</h3>
+        <div class="big" id="r-disponible">—</div>
+        <div class="sub" id="r-disponible-det"></div>
+      </div>
+      
+      <div class="card">
+        <h3>Total ahorrado</h3>
+        <div class="big pos" id="r-ahorro-total">—</div>
+        <div class="sub" id="r-ahorro-det"></div>
+      </div>
+      
+      <div class="card">
+        <h3>Patrimonio neto</h3>
+        <div class="big" id="r-patrimonio">—</div>
+        <div class="sub" id="r-patrimonio-det"></div>
+      </div>
+    </div>
+    
+    <div class="grid cols3 mt">
+      <div class="card"><h3>Ingresos mes</h3><div class="mid pos" id="r-ingresos">—</div></div>
+      <div class="card"><h3>Gastos mes</h3><div class="mid neg" id="r-gastos">—</div></div>
+      <div class="card"><h3>Apartado ahorro</h3><div class="mid" id="r-ahorro-mes">—</div></div>
+      <div class="card"><h3>Pagos pendientes</h3><div class="mid warn" id="r-pendientes">—</div></div>
+    </div>
+    
+    <div class="grid cols2 mt">
+      <div class="card"><h3>Próximos pagos</h3><div id="r-proximos"></div></div>
+      <div class="card"><h3>Gastos por categoría</h3><div id="r-categorias"></div></div>
+    </div>
+    
+    <div class="card mt"><h3>Regla 50 / 30 / 20</h3><div id="r-regla"></div></div>
+    <div class="card mt"><h3>Presupuestos (% del ingreso)</h3><div id="r-presupuestos"></div></div>
+    <div class="card mt"><h3>Progreso de metas</h3><div id="r-metas"></div></div>
+  </section>
+
+  <section id="t-movs" class="hidden">
+    <div class="card">
+      <h3>Registrar movimiento</h3>
+      <form class="add" id="f-mov">
+        <label class="f">Tipo<select id="m-tipo"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option></select></label>
+        <label class="f">Monto (CAD)<input type="number" id="m-monto" step="0.01" min="0.01" placeholder="0.00"></label>
+        <label class="f" id="wrap-cat">Categoría<select id="m-cat"></select></label>
+        <label class="f hidden" id="wrap-fuente">Fuente<select id="m-fuente"><option value="Full time">Sueldo full time</option><option value="Part time">Part time</option></select></label>
+        <label class="f">Fecha<input type="date" id="m-fecha"></label>
+        <label class="f">Nota<input type="text" id="m-nota" placeholder="opcional"></label>
+        <button class="btn" type="submit">Agregar</button>
+      </form>
+      <div class="sub" id="m-aviso"></div>
+    </div>
+    
+    <div class="card mt">
+      <h3>Importar CSV</h3>
+      <input type="file" id="csv-file" accept=".csv,text/csv">
+      <div class="sub" id="csv-result" style="margin-top:8px"></div>
+    </div>
+    
+    <div class="card mt">
+      <div class="flexh"><h3 style="margin:0">Historial</h3><div class="monthnav"><button class="btn sec mini" onclick="cambiarMes(-1)">←</button><b id="m-mes"></b><button class="btn sec mini" onclick="cambiarMes(1)">→</button></div></div>
+      <div id="m-lista"></div>
+    </div>
+  </section>
+
+  <section id="t-pagos" class="hidden">
+    <div class="card">
+      <h3>Agregar pago fijo</h3>
+      <form class="add" id="f-bill">
+        <label class="f">Nombre<input type="text" id="b-nombre" placeholder="ej. Renta" required></label>
+        <label class="f">Monto<input type="number" id="b-monto" step="0.01" min="0.01" required></label>
+        <label class="f">Día del mes<input type="number" id="b-dia" min="1" max="31" placeholder="1-31" required></label>
+        <label class="f">Categoría<select id="b-cat"></select></label>
+        <button class="btn" type="submit">Agregar</button>
+      </form>
+    </div>
+    <div class="card mt"><h3>Tus pagos fijos</h3><div id="b-lista"></div></div>
+    <div class="card mt"><h3>Presupuestos variables</h3><div id="b-presupuestos"></div></div>
+  </section>
+
+  <section id="t-deudas" class="hidden">
+    <div class="card">
+      <h3>Agregar deuda</h3>
+      <form class="add" id="f-deuda">
+        <label class="f">Tipo<select id="d-tipo"><option value="tarjeta">Tarjeta crédito</option><option value="affirm">Affirm</option><option value="prestamo">Préstamo</option></select></label>
+        <label class="f">Nombre<input type="text" id="d-nombre" placeholder="ej. CIBC" required></label>
+        <label class="f">Saldo<input type="number" id="d-saldo" step="0.01" min="0" required></label>
+        <label class="f" id="wrap-min">Pago mínimo<input type="number" id="d-min" step="0.01" min="0"></label>
+        <label class="f hidden" id="wrap-cuota">Cuota<input type="number" id="d-cuota" step="0.01" min="0"></label>
+        <label class="f">Día vence<input type="number" id="d-dia" min="1" max="31" required></label>
+        <button class="btn" type="submit">Agregar</button>
+      </form>
+    </div>
+    <div class="card mt" id="d-plan"></div>
+    <div class="grid cols2 mt" id="d-lista"></div>
+  </section>
+
+  <section id="t-metas" class="hidden">
+    <div class="card">
+      <h3>Nueva meta de ahorro</h3>
+      <form class="add" id="f-meta">
+        <label class="f">Nombre<input type="text" id="g-nombre" placeholder="ej. Fondo emergencia" required></label>
+        <label class="f">Objetivo<input type="number" id="g-objetivo" step="0.01" min="1" required></label>
+        <label class="f">Ya tienes<input type="number" id="g-inicial" step="0.01" min="0" value="0"></label>
+        <button class="btn" type="submit">Crear meta</button>
+      </form>
+    </div>
+    <div class="grid cols2 mt" id="g-lista"></div>
+  </section>
+
+  <section id="t-ajustes" class="hidden">
+    <div class="card">
+      <h3>Configuración</h3>
+      <form class="add" id="f-config">
+        <label class="f">% ahorro automático<input type="number" id="c-ahorro" min="0" max="90" step="1"></label>
+        <label class="f">Avisar con __ días antes<input type="number" id="c-dias" min="0" max="15" step="1"></label>
+        <label class="f">Ingreso mensual esperado<input type="number" id="c-ingreso" min="0" step="1"></label>
+        <label class="f">% para atacar deudas<input type="number" id="c-deuda" min="0" max="80" step="1"></label>
+        <button class="btn" type="submit">Guardar</button>
+      </form>
+    </div>
+    <div class="card mt">
+      <h3>Notificaciones</h3>
+      <button class="btn sec mt" onclick="probarNotif()">Probar notificación</button>
+    </div>
+  </section>
+</main>
+
+<div id="pinlock" class="hidden">
+  <div class="card" style="text-align:center;width:320px">
+    <h1 style="color:var(--primary);font-size:40px;margin-bottom:4px">💰</h1>
+    <h3 style="margin:0 0 20px">Mi Dinero</h3>
+    <input type="password" inputmode="numeric" id="pin-input" maxlength="6" placeholder="PIN" autocomplete="off">
+    <button class="btn" style="width:100%;margin-top:12px" onclick="loginPin()">Entrar</button>
+    <div id="pin-err"></div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+const CATS = ["Comida","Restaurantes","Transporte","Renta/Vivienda","Mudanza","Servicios","Suscripciones","Compras","Ropa","Cuidado personal","Salud","Educación","Ocio","Regalos","Deudas","Familia","Otro"];
+const CATCOLORS = {"Comida":"#e74c3c","Restaurantes":"#e67e22","Transporte":"#3498db","Renta/Vivienda":"#9b59b6","Servicios":"#1abc9c","Suscripciones":"#e91e63","Compras":"#ff9800","Salud":"#27ae60","Ocio":"#8e44ad","Deudas":"#c0392b","Mudanza":"#f39c12","Familia":"#16a085","Ropa":"#d35400","Cuidado personal":"#2980b9","Educación":"#2c3e50","Regalos":"#f1c40f","Otro":"#95a5a6"};
+const fmt = new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD"});
+const $ = id => document.getElementById(id);
+let DB = null;
+let mesVista = new Date();
+
+const hoyISO = () => new Date().toISOString().slice(0,10);
+const periodo = d => d.toISOString ? d.toISOString().slice(0,7) : d.slice(0,7);
+const periodoActual = () => hoyISO().slice(0,7);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+function proximaFecha(dia){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  let y = hoy.getFullYear(), m = hoy.getMonth();
+  let f = new Date(y, m, Math.min(dia, diasEnMes(y,m)));
+  if (f < hoy) { m++; if(m>11){m=0;y++;} f = new Date(y, m, Math.min(dia, diasEnMes(y,m))); }
+  return f;
+}
+const diasEnMes = (y,m) => new Date(y, m+1, 0).getDate();
+const diasPara = f => Math.round((f - new Date(new Date().setHours(0,0,0,0))) / 86400000);
+
+let TOKEN = "";
+async function api(path, opts={}){
+  opts.headers = Object.assign({}, opts.headers, {"X-Auth": TOKEN});
+  const r = await fetch(path, opts);
+  if (r.status === 401){ mostrarPin(); throw new Error("pin requerido"); }
+  return r;
+}
+function mostrarPin(){ $("pinlock").classList.remove("hidden"); $("pin-input").focus(); }
+async function loginPin(){
+  const pin = $("pin-input").value;
+  if (!pin) return;
+  const r = await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pin})});
+  if (r.ok){
+    TOKEN = (await r.json()).token;
+    $("pinlock").classList.add("hidden");
+    $("pin-err").textContent = "";
+    cargar();
+  } else {
+    $("pin-err").textContent = "PIN incorrecto";
+    $("pin-input").value = "";
+  }
+}
+async function cargar(){ try { DB = await (await api("/api/data")).json(); render(); } catch(e) { } }
+async function guardar(){ await api("/api/data",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(DB)}); render(); }
+
+function calcMes(per){
+  const ing = DB.incomes.filter(i => periodo(i.date) === per);
+  const gas = DB.expenses.filter(e => periodo(e.date) === per);
+  const totalIng = ing.reduce((s,i)=>s+i.amount,0);
+  const totalAhorro = ing.reduce((s,i)=>s+(i.saved||0),0);
+  const totalGas = gas.reduce((s,e)=>s+e.amount,0);
+  let pendientes = 0;
+  const porPagar = [];
+  const cubierto = pp => pp && pp >= per;
+  for (const b of DB.bills){ if (!cubierto(b.paidPeriod)){ pendientes += b.amount; porPagar.push({tipo:"bill",obj:b,nombre:b.name,monto:b.amount,dia:b.dueDay}); } }
+  for (const d of DB.debts){ if (d.balance > 0 && !cubierto(d.paidPeriod)){ const pago = d.type === "affirm" ? (d.installmentAmount||0) : (d.minPayment||0); pendientes += pago; porPagar.push({tipo:"debt",obj:d,nombre:d.name,monto:pago,dia:d.dueDay}); } }
+  return { totalIng, totalAhorro, totalGas, pendientes, porPagar, disponible: totalIng - totalAhorro - totalGas - pendientes };
+}
+
+function ajusteCuenta(delta){ if (typeof DB.accountBalance === "number") DB.accountBalance = +(DB.accountBalance + delta).toFixed(2); }
+function ajustarCuentas(){
+  const v = prompt("¿Cuánto dinero disponible tienes ahora?", DB.accountBalance ?? "");
+  if (v === null) return;
+  const n = parseFloat(v);
+  if (isNaN(n)) return;
+  DB.accountBalance = n;
+  guardar();
+}
+
+function render(){
+  const per = periodoActual();
+  const c = calcMes(per);
+  const cuentas = $("r-cuentas");
+  if (typeof DB.accountBalance === "number"){
+    cuentas.textContent = fmt.format(DB.accountBalance);
+    cuentas.className = "big " + (DB.accountBalance >= 100 ? "pos" : "neg");
+  }
+  const disp = $("r-disponible");
+  disp.textContent = fmt.format(c.disponible);
+  disp.className = "big " + (c.disponible >= 0 ? "pos" : "neg");
+  $("r-disponible-det").textContent = c.disponible >= 0 ? "Después de apartar ahorro y cubrir pagos." : "⚠️ Cuidado: vas en negativo este mes.";
+  const enMetas = DB.goals.reduce((s,g)=>s+g.saved,0);
+  $("r-ahorro-total").textContent = fmt.format(DB.savingsBalance + enMetas);
+  $("r-ahorro-det").textContent = `${fmt.format(DB.savingsBalance)} libre + ${fmt.format(enMetas)} en metas`;
+  const deudaTotal = DB.debts.reduce((s,x)=>s+x.balance,0);
+  const activos = (DB.assets||[]).reduce((s,a)=>s+a.value,0);
+  const liquido = (typeof DB.accountBalance==="number"?DB.accountBalance:0) + DB.savingsBalance + enMetas;
+  const patrimonio = liquido + activos - deudaTotal;
+  const pat = $("r-patrimonio");
+  pat.textContent = fmt.format(patrimonio);
+  pat.className = "big " + (patrimonio >= 0 ? "pos" : "neg");
+  const activosDet = (DB.assets||[]).map(a=>`${a.name} ${fmt.format(a.value)}`).join(" + ");
+  $("r-patrimonio-det").textContent = `Dinero ${fmt.format(liquido)}${activos?` + ${activosDet}`:""} − deudas ${fmt.format(deudaTotal)}`;
+  $("r-ingresos").textContent = fmt.format(c.totalIng);
+  $("r-gastos").textContent = fmt.format(c.totalGas);
+  $("r-ahorro-mes").textContent = fmt.format(c.totalAhorro);
+  $("r-pendientes").textContent = fmt.format(c.pendientes);
+
+  const prox = c.porPagar.map(p => ({...p, fecha: proximaFecha(p.dia||1)})).sort((a,b)=>a.fecha-b.fecha);
+  $("r-proximos").innerHTML = prox.length ? prox.map(p=>{
+    const d = diasPara(p.fecha);
+    const tag = d<=0 ? `<span class="tag red">¡HOY!</span>` : d<=3 ? `<span class="tag red">en ${d}d</span>` : d<=7 ? `<span class="tag orange">en ${d}d</span>` : `<span class="tag gray">en ${d}d</span>`;
+    return `<div class="row"><div class="l"><div class="name">${p.nombre}</div><div class="det">${p.fecha.toLocaleDateString("es",{day:"numeric",month:"short"})}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="amt">${fmt.format(p.monto)}</span>${tag}<button class="btn mini" onclick="pagarItem('${p.tipo}','${p.obj.id}')">Pagado</button></div></div>`;
+  }).join("") : `<div class="empty">Sin pagos pendientes</div>`;
+
+  const gastosMes = DB.expenses.filter(e=>periodo(e.date)===per);
+  const porCat = {};
+  gastosMes.forEach(e=>{ porCat[e.category] = (porCat[e.category]||0)+e.amount; });
+  const cats = Object.entries(porCat).sort((a,b)=>b[1]-a[1]);
+  const maxCat = cats.length ? cats[0][1] : 1;
+  $("r-categorias").innerHTML = cats.length ? cats.map(([cat,v])=>
+    `<div class="catbar"><div class="cname">${cat}</div><div class="ctrack"><div style="width:${Math.max(4,v/maxCat*100)}%;background:${CATCOLORS[cat]||"#95a5a6"}"></div></div><div class="cval">${fmt.format(v)}</div></div>`).join("") : `<div class="empty">Sin gastos este mes</div>`;
+
+  const NEC = ["Comida","Transporte","Renta/Vivienda","Servicios","Salud","Familia","Mudanza"];
+  const GUSTOS = ["Restaurantes","Suscripciones","Compras","Ocio","Otro"];
+  let nec = 0, gustos = 0, futuro = c.totalAhorro;
+  gastosMes.forEach(e=>{ if (e.category === "Deudas") futuro += e.amount; else if (NEC.includes(e.category)) nec += e.amount; else gustos += e.amount; });
+  const ing503020 = c.totalIng;
+  if (ing503020 > 0){
+    const filas = [["Necesidades", nec, 50, "#3498db"], ["Gustos", gustos, 30, "#9b59b6"], ["Ahorro + deudas", futuro, 20, "#27ae60"]];
+    $("r-regla").innerHTML = filas.map(([nom, val, meta, col])=>{ const pct = val / ing503020 * 100; const ok = nom.includes("Ahorro") ? pct >= meta : pct <= meta; return `<div style="margin-bottom:16px"><div class="flexh" style="margin-bottom:4px"><span class="name">${nom}</span><span class="sub">${fmt.format(val)} · <b class="${ok?"pos":"neg"}">${pct.toFixed(0)}%</b></span></div><div class="bar"><div style="width:${Math.min(100,pct)}%;background:${ok?col:"var(--danger)"}"></div></div></div>`; }).join("");
+  }
+
+  const bp = DB.budgetPct || {};
+  const claves = Object.keys(bp);
+  if (claves.length){
+    const htmlPresupuestos = claves.map(cat=>{ const pct = bp[cat]; const limite = c.totalIng * pct / 100; const gastado = porCat[cat] || 0; const p = limite > 0 ? gastado/limite*100 : (gastado > 0 ? 101 : 0); const ok = p <= 100; return `<div class="catbar"><div class="cname">${cat} · ${pct}%</div><div class="ctrack"><div style="width:${Math.min(100,p)}%;background:${ok?(CATCOLORS[cat]||"#3498db"):"var(--danger)"}"></div></div><div class="cval">${fmt.format(gastado)} / ${fmt.format(limite)}</div></div>`; }).join("");
+    $("r-presupuestos").innerHTML = htmlPresupuestos;
+    $("b-presupuestos").innerHTML = htmlPresupuestos;
+  }
+
+  $("r-metas").innerHTML = DB.goals.length ? DB.goals.map(g=>{ const pct = Math.min(100, g.saved/g.target*100); return `<div style="margin-bottom:16px"><div class="flexh" style="margin-bottom:4px"><span class="name">${g.name}</span><span class="sub">${pct.toFixed(0)}%</span></div><div class="bar"><div style="width:${pct}%"></div></div></div>`; }).join("") : `<div class="empty">Crea tu primera meta</div>`;
+
+  renderMovs(); renderBills(); renderDeudas(); renderMetas();
+  $("c-ahorro").value = DB.config.savingsPercent;
+  $("c-dias").value = DB.config.notifyDaysBefore;
+  $("c-ingreso").value = DB.config.expectedIncome || "";
+  $("c-deuda").value = DB.config.debtPct || "";
+}
+
+function renderMovs(){ const per = mesVista.toISOString().slice(0,7); $("m-mes").textContent = mesVista.toLocaleDateString("es",{month:"long",year:"numeric"}); const movs = [...DB.incomes.filter(i=>periodo(i.date)===per).map(i=>({...i,_t:"ingreso"})), ...DB.expenses.filter(e=>periodo(e.date)===per).map(e=>({...e,_t:"gasto"}))].sort((a,b)=> b.date.localeCompare(a.date)); $("m-lista").innerHTML = movs.length ? movs.map(m=>{ const esIng = m._t==="ingreso"; const det = esIng ? `${m.source||"Ingreso"} · ${m.date}` : `${m.category} · ${m.date}`; return `<div class="row"><div class="l"><div class="name">${esIng?(m.note||m.source||"Ingreso"):(m.note||m.category)}</div><div class="det">${det}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="amt ${esIng?"pos":"neg"}">${esIng?"+":"−"}${fmt.format(m.amount)}</span><button class="btn sec mini" onclick="borrarMov('${m._t}','${m.id}')">✕</button></div></div>`; }).join("") : `<div class="empty">Sin movimientos</div>`; }
+
+function renderBills(){ $("b-lista").innerHTML = DB.bills.length ? DB.bills.map(b=>{ const pagado = !!b.paidPeriod && b.paidPeriod >= periodoActual(); return `<div class="row"><div class="l"><div class="name">${b.name}</div><div class="det">Día ${b.dueDay} ${pagado?'<span class="tag green">pagado ✓</span>':""}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="amt">${fmt.format(b.amount)}</span>${pagado?`<button class="btn sec mini" onclick="desmarcarBill('${b.id}')">↩</button>`:`<button class="btn mini" onclick="pagarItem('bill','${b.id}')">Pagado</button>`}<button class="btn sec mini" onclick="borrarBill('${b.id}')">✕</button></div></div>`; }).join("") : `<div class="empty">Agrega renta, teléfono, suscripciones...</div>`; }
+
+function renderDeudas(){ $("d-lista").innerHTML = DB.debts.length ? DB.debts.map(d=>{ const pagado = !!d.paidPeriod && d.paidPeriod >= periodoActual(); const extra = d.type==="affirm" ? `Cuota: ${fmt.format(d.installmentAmount||0)}` : `Mínimo: ${fmt.format(d.minPayment||0)}`; const liquidada = d.balance <= 0; return `<div class="card"><div class="flexh"><div><div class="name" style="font-size:16px">${d.name}</div><div class="det">Día ${d.dueDay} · ${extra}</div></div>${liquidada?'<span class="tag green">LIQUIDADA ✓</span>':pagado?'<span class="tag green">pagado ✓</span>':""}</div><div class="mid ${liquidada?"pos":"neg"}" style="margin:12px 0">${fmt.format(d.balance)}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${liquidada?"":`<button class="btn mini" onclick="pagarDeuda('${d.id}')">Registrar pago</button>`}<button class="btn sec mini" onclick="editarSaldo('${d.id}')">Ajustar</button><button class="btn sec mini" onclick="borrarDeuda('${d.id}')">Eliminar</button></div></div>`; }).join("") : `<div class="empty" style="grid-column:1/-1">Agrega tarjetas y planes</div>`; renderPlanDeudas(); }
+
+function renderPlanDeudas(){ const el = $("d-plan"); const inc = DB.config.expectedIncome || 0; const pctDeuda = DB.config.debtPct || 0; const extra = inc * pctDeuda / 100; const activas = DB.debts.filter(d => d.balance > 0 && d.type !== "affirm"); if (!activas.length){ el.innerHTML = `<h3>Plan de deudas</h3><div class="empty">Sin deudas activas — LIBRE ✓</div>`; return; } if (!(extra > 0)){ el.innerHTML = `<h3>Plan de deudas</h3><div class="empty">Configura ingreso y % en Ajustes</div>`; return; } const sim = activas.map(d => ({name:d.name, bal:d.balance, tasa:(d.apr||21)/1200, min:Math.max(d.minPayment||0, 30)})).sort((a,b) => b.tasa - a.tasa); let meses = 0, interesTotal = 0; const hitos = []; const inicio = new Date(); while (sim.some(x => x.bal > 0) && meses < 120){ meses++; let libre = extra; for (const x of sim){ if (x.bal <= 0) continue; const i = x.bal * x.tasa; interesTotal += i; x.bal = x.bal + i - Math.min(x.bal + i, x.min); } for (const x of sim){ if (x.bal > 0 && libre > 0){ const p = Math.min(libre, x.bal); x.bal -= p; libre -= p; } if (x.bal <= 0 && !x.done){ x.done = true; const f = new Date(inicio.getFullYear(), inicio.getMonth() + meses, 1); hitos.push(`${x.name} en ${f.toLocaleDateString("es",{month:"long",year:"numeric"})}`); } } } el.innerHTML = `<h3>Plan de deudas</h3><div class="row"><div class="l"><div class="name">Libre en</div></div><span class="amt pos">${meses} meses</span></div>${hitos.map(h => `<div class="row"><div class="det">✓ ${h}</div></div>`).join("")}<div class="row"><div class="l"><div class="det">Interés</div></div><span class="amt neg">${fmt.format(interesTotal)}</span></div>`; }
+
+function renderMetas(){ $("g-lista").innerHTML = DB.goals.length ? DB.goals.map(g=>{ const pct = Math.min(100, g.saved/g.target*100); const falta = Math.max(0, g.target-g.saved); return `<div class="card"><div class="flexh"><div class="name" style="font-size:16px">${g.name}</div>${pct>=100?'<span class="tag green">✓</span>':`<span class="tag gray">falta ${fmt.format(falta)}</span>`}</div><div class="mid pos" style="margin:8px 0">${fmt.format(g.saved)} <span class="sub" style="font-weight:400">de ${fmt.format(g.target)}</span></div><div class="bar"><div style="width:${pct}%"></div></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn mini" onclick="abonarMeta('${g.id}')">+ Abonar</button><button class="btn sec mini" onclick="borrarMeta('${g.id}')">Eliminar</button></div></div>`; }).join("") : `<div class="empty" style="grid-column:1/-1">ej. Fondo emergencia</div>`; }
+
+function pagarItem(tipo, id){ const per = periodoActual(); if (tipo === "bill"){ const b = DB.bills.find(x=>x.id===id); if(!b) return; const ahora = confirm(`${b.name} — ${fmt.format(b.amount)}\n\n¿El dinero salió ahora?`); b.paidPeriod = per; if (ahora){ DB.expenses.push({id:uid(),date:hoyISO(),amount:b.amount,category:b.category||"Servicios",note:b.name}); ajusteCuenta(-b.amount); } } else { pagarDeuda(id); return; } guardar(); }
+function pagarDeuda(id){ const d = DB.debts.find(x=>x.id===id); if(!d) return; const sugerido = d.type==="affirm" ? (d.installmentAmount||0) : (d.minPayment||0); const v = prompt(`¿Cuánto pagaste a ${d.name}?`, sugerido||""); if (v===null) return; const monto = parseFloat(v); if(!(monto>0)) return; const ahora = confirm(`Pago de ${fmt.format(monto)}\n\n¿El dinero salió ahora?`); d.balance = Math.max(0, +(d.balance - monto).toFixed(2)); d.paidPeriod = periodoActual(); if (d.type==="affirm" && d.remainingPayments!=null && d.remainingPayments>0) d.remainingPayments--; DB.expenses.push({id:uid(),date:hoyISO(),amount:monto,category:"Deudas",note:"Pago " + d.name,cash:ahora}); if (ahora) ajusteCuenta(-monto); guardar(); }
+function editarSaldo(id){ const d = DB.debts.find(x=>x.id===id); if(!d) return; const v = prompt(`Nuevo saldo de ${d.name}:`, d.balance); if (v===null) return; const n = parseFloat(v); if(isNaN(n)||n<0) return; d.balance = n; guardar(); }
+function desmarcarBill(id){ const b = DB.bills.find(x=>x.id===id); if(!b) return; for (let i = DB.expenses.length-1; i >= 0; i--){ const e = DB.expenses[i]; if (e.note === b.name && e.amount === b.amount){ DB.expenses.splice(i,1); ajusteCuenta(+b.amount); break; } } b.paidPeriod = null; guardar(); }
+function desmarcarDeuda(id){ const d = DB.debts.find(x=>x.id===id); if(!d) return; for (let i = DB.expenses.length-1; i >= 0; i--){ const e = DB.expenses[i]; if (e.note === "Pago " + d.name && e.category === "Deudas"){ d.balance = +(d.balance + e.amount).toFixed(2); if (d.type === "affirm" && d.remainingPayments != null) d.remainingPayments++; DB.expenses.splice(i,1); if (e.cash !== false) ajusteCuenta(+e.amount); break; } } d.paidPeriod = null; guardar(); }
+function borrarMov(t,id){ if(!confirm("¿Borrar?")) return; if (t==="ingreso"){ const i = DB.incomes.find(x=>x.id===id); if (i){ if (i.saved) DB.savingsBalance = Math.max(0, +(DB.savingsBalance - i.saved).toFixed(2)); ajusteCuenta(-i.amount); } DB.incomes = DB.incomes.filter(x=>x.id!==id); } else { const e = DB.expenses.find(x=>x.id===id); if (e) ajusteCuenta(+e.amount); DB.expenses = DB.expenses.filter(x=>x.id!==id); } guardar(); }
+function borrarBill(id){ if(confirm("¿Eliminar pago?")){ DB.bills = DB.bills.filter(x=>x.id!==id); guardar(); } }
+function borrarDeuda(id){ if(confirm("¿Eliminar deuda?")){ DB.debts = DB.debts.filter(x=>x.id!==id); guardar(); } }
+function borrarMeta(id){ const g = DB.goals.find(x=>x.id===id); if(!g) return; if(!confirm(`¿Eliminar "${g.name}"?`)) return; DB.savingsBalance = +(DB.savingsBalance + g.saved).toFixed(2); DB.goals = DB.goals.filter(x=>x.id!==id); guardar(); }
+function abonarMeta(id){ const g = DB.goals.find(x=>x.id===id); if(!g) return; const v = prompt(`¿Cuánto abonas? Disponible: ${fmt.format(DB.savingsBalance)}`); if (v===null) return; const monto = parseFloat(v); if(!(monto>0)) return; g.saved = +(g.saved+monto).toFixed(2); DB.savingsBalance = Math.max(0, +(DB.savingsBalance - monto).toFixed(2)); guardar(); }
+function cambiarMes(d){ mesVista.setMonth(mesVista.getMonth()+d); renderMovs(); }
+async function probarNotif(){ await api("/api/test-notification",{method:"POST"}); }
+
+const REGLAS_CAT = [[/ESSO|PETRO|SHELL|CIRCLE K|GAS/i, "Transporte"], [/UBER|LYFT|PRES|GO TRANSIT/i, "Transporte"], [/RCSS|COSTCO|WALMART|FRESHCO|FOOD|LOBLAW|METRO|HARVEST|MARCHE/i, "Comida"], [/PIZZA|CHIPOTLE|SUBWAY|STARBUCKS|COFFEE|TIM|MCDONALD|RESTAUR|BURGER|SUSHI/i, "Restaurantes"], [/APPLE|SPOTIFY|NETFLIX|DISNEY|YOUTUBE|GYM|CLAUDE/i, "Suscripciones"], [/BELL|ROGERS|TELUS|FIDO|HYDRO|METERGY|ENBRIDGE|INSURANCE/i, "Servicios"], [/SHOPPERS|PHARMA|REXALL|DENTAL|MEDICAL/i, "Salud"], [/AMAZON|AMZN|WINNERS|MARSHALL|IKEA|HOME DEPOT|BEST BUY|CANADIAN TIRE/i, "Compras"], [/AFFIRM|PAYMENT|TFR|LOAN/i, "Deudas"]];
+function categorizar(desc){ for (const [re, cat] of REGLAS_CAT) if (re.test(desc)) return cat; return "Otro"; }
+function parseCSVLine(l){ const out = []; let cur = "", inQ = false; for (const ch of l){ if (ch === '"'){ inQ = !inQ; continue; } if (ch === ',' && !inQ){ out.push(cur); cur = ""; } else cur += ch; } out.push(cur); return out; }
+function normFecha(s){ s = s.trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (m) return `${m[3]}-${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}`; return null; }
+$("csv-file").onchange = async e => { const f = e.target.files[0]; if (!f) return; const texto = await f.text(); const existentes = new Set([...DB.expenses.map(x=>`${x.date}|${x.amount}|${(x.note||"").trim()}`), ...DB.incomes.map(x=>`${x.date}|${x.amount}|${(x.note||"").trim()}`)]; let nuevos = 0, dups = 0, malas = 0; for (const linea of texto.split(/\r?\n/)){ if (!linea.trim()) continue; const c = parseCSVLine(linea); if (c.length < 4){ malas++; continue; } const fecha = normFecha(c[0]); if (!fecha){ malas++; continue; } const desc = c[1].replace(/\s+/g," ").trim(); const debito = parseFloat(c[2]) || 0; const credito = parseFloat(c[3]) || 0; const monto = debito || credito; if (!(monto > 0)) continue; const clave = `${fecha}|${monto}|${desc}`; if (existentes.has(clave)){ dups++; continue; } existentes.add(clave); if (debito > 0){ DB.expenses.push({id:uid(),date:fecha,amount:debito,category:categorizar(desc),note:desc,imported:true,cash:false}); } else { DB.incomes.push({id:uid(),date:fecha,amount:credito,source:"Importado",note:desc,saved:0,imported:true}); } nuevos++; } e.target.value = ""; $("csv-result").textContent = `✓ ${nuevos} importados · ${dups} duplicados`; if (nuevos) guardar(); };
+
+$("m-tipo").onchange = e => { const ing = e.target.value==="ingreso"; $("wrap-cat").classList.toggle("hidden", ing); $("wrap-fuente").classList.toggle("hidden", !ing); };
+$("f-mov").onsubmit = e => { e.preventDefault(); const monto = parseFloat($("m-monto").value); if(!(monto>0)) return; const fecha = $("m-fecha").value || hoyISO(); const nota = $("m-nota").value.trim(); if ($("m-tipo").value === "ingreso"){ const pct = DB.config.savingsPercent||0; const saved = +(monto*pct/100).toFixed(2); DB.incomes.push({id:uid(),date:fecha,amount:monto,source:$("m-fuente").value,note:nota,saved}); DB.savingsBalance = +(DB.savingsBalance+saved).toFixed(2); ajusteCuenta(+monto); $("m-aviso").textContent = saved>0 ? `✓ Se apartaron ${fmt.format(saved)} (${pct}%)` : "✓ Registrado"; } else { DB.expenses.push({id:uid(),date:fecha,amount:monto,category:$("m-cat").value,note:nota}); ajusteCuenta(-monto); $("m-aviso").textContent = "✓ Registrado"; } $("m-monto").value=""; $("m-nota").value=""; mesVista = new Date(fecha+"T12:00:00"); guardar(); };
+$("f-bill").onsubmit = e => { e.preventDefault(); DB.bills.push({id:uid(),name:$("b-nombre").value.trim(),amount:parseFloat($("b-monto").value), dueDay:parseInt($("b-dia").value),category:$("b-cat").value,paidPeriod:null}); e.target.reset(); guardar(); };
+$("d-tipo").onchange = e => { const affirm = e.target.value==="affirm"; $("wrap-min").classList.toggle("hidden", affirm); $("wrap-cuota").classList.toggle("hidden", !affirm); };
+$("f-deuda").onsubmit = e => { e.preventDefault(); const tipo = $("d-tipo").value; const d = {id:uid(),type:tipo,name:$("d-nombre").value.trim(),balance:parseFloat($("d-saldo").value), dueDay:parseInt($("d-dia").value),paidPeriod:null}; if (tipo==="affirm"){ d.installmentAmount = parseFloat($("d-cuota").value)||0; d.remainingPayments = d.installmentAmount>0 ? Math.ceil(d.balance/d.installmentAmount) : null; } else d.minPayment = parseFloat($("d-min").value)||0; DB.debts.push(d); e.target.reset(); guardar(); };
+$("f-meta").onsubmit = e => { e.preventDefault(); DB.goals.push({id:uid(),name:$("g-nombre").value.trim(),target:parseFloat($("g-objetivo").value), saved:parseFloat($("g-inicial").value)||0}); e.target.reset(); guardar(); };
+$("f-config").onsubmit = e => { e.preventDefault(); DB.config.savingsPercent = parseFloat($("c-ahorro").value)||0; DB.config.notifyDaysBefore = parseInt($("c-dias").value)||3; DB.config.expectedIncome = parseFloat($("c-ingreso").value)||0; DB.config.debtPct = parseFloat($("c-deuda").value)||0; guardar(); };
+
+document.querySelectorAll("nav button").forEach(b=>{ b.onclick = () => { document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden")); $("t-"+b.dataset.t).classList.remove("hidden"); }; });
+CATS.forEach(c=>{ $("m-cat").insertAdjacentHTML("beforeend",`<option>${c}</option>`); $("b-cat").insertAdjacentHTML("beforeend",`<option>${c}</option>`); });
+$("pin-input").addEventListener("keydown", e => { if (e.key === "Enter") loginPin(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden){ TOKEN = ""; } else cargar(); });
+$("m-fecha").value = hoyISO();
+$("fecha").textContent = new Date().toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+cargar();
+</script>
+
+</body>
+</html>

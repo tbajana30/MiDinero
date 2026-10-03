@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""Mi Dinero — servidor local de finanzas personales.
+
+Sirve el dashboard en http://127.0.0.1:8765, guarda los datos en data.json
+y manda notificaciones de macOS cuando un pago está por vencer.
+Solo usa la librería estándar de Python.
+"""
+import json
+import os
+import secrets
+import subprocess
+import sys
+import threading
+import time
+from datetime import date, datetime, timedelta
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(BASE, "data.json")
+INDEX_FILE = os.path.join(BASE, "index.html")
+PORT = 9000
+LOCK = threading.Lock()
+PIN = "3012"
+TOKENS = set()  # tokens de sesión válidos (se reinician al reiniciar el servidor)
+
+DEFAULT_DATA = {
+    "config": {
+        "currency": "CAD",
+        "savingsPercent": 20,
+        "payDays": [15, 30],
+        "notifyDaysBefore": 3,
+    },
+    "incomes": [],
+    "expenses": [],
+    "bills": [],
+    "debts": [],
+    "goals": [],
+    "savingsBalance": 0,
+    "notified": {},
+}
+
+
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        save_data(DEFAULT_DATA)
+        return json.loads(json.dumps(DEFAULT_DATA))
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_data(data):
+    tmp = DATA_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, DATA_FILE)
+
+
+def notify(title, message):
+    script = 'display notification "{}" with title "{}" sound name "Glass"'.format(
+        message.replace('"', "'"), title.replace('"', "'")
+    )
+    try:
+        subprocess.run(["osascript", "-e", script], timeout=10,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+def next_due_date(due_day, today):
+    """Próxima fecha para un pago mensual que vence el día `due_day`."""
+    day = min(due_day, 28) if due_day > 28 else due_day
+    try:
+        candidate = today.replace(day=due_day)
+    except ValueError:
+        candidate = today.replace(day=28)
+    if candidate < today:
+        month = today.month + 1
+        year = today.year
+        if month > 12:
+            month, year = 1, year + 1
+        try:
+            candidate = date(year, month, due_day)
+        except ValueError:
+            candidate = date(year, month, 28)
+    return candidate
+
+
+def check_reminders():
+    """Revisa pagos próximos y manda notificaciones (una vez por periodo)."""
+    with LOCK:
+        data = load_data()
+        days_before = int(data["config"].get("notifyDaysBefore", 3))
+        today = date.today()
+        period = today.strftime("%Y-%m")
+        changed = False
+
+        items = []
+        for b in data.get("bills", []):
+            if (b.get("paidPeriod") or "") >= period:  # pagado este mes o por adelantado
+                continue
+            items.append(("bill-" + str(b["id"]), b["name"], b.get("dueDay"), b.get("amount")))
+        for d in data.get("debts", []):
+            if float(d.get("balance", 0)) <= 0:
+                continue
+            if (d.get("paidPeriod") or "") >= period:
+                continue
+            label = "Tarjeta " + d["name"] if d.get("type") == "tarjeta" else d["name"]
+            amount = d.get("minPayment") or d.get("installmentAmount")
+            items.append(("debt-" + str(d["id"]), label, d.get("dueDay"), amount))
+
+        for key, name, due_day, amount in items:
+            if not due_day:
+                continue
+            due = next_due_date(int(due_day), today)
+            days_left = (due - today).days
+            if days_left <= days_before:
+                stamp = due.isoformat()
+                if data["notified"].get(key) == stamp:
+                    continue
+                amt = " (${:,.2f})".format(float(amount)) if amount else ""
+                if days_left <= 0:
+                    msg = "¡{}{} vence HOY!".format(name, amt)
+                elif days_left == 1:
+                    msg = "{}{} vence mañana".format(name, amt)
+                else:
+                    msg = "{}{} vence en {} días".format(name, amt, days_left)
+                notify("💰 Mi Dinero — pago próximo", msg)
+                data["notified"][key] = stamp
+                changed = True
+
+        # revisión semanal: domingos, ritual de 15 minutos
+        if today.weekday() == 6:
+            hoy_s = today.isoformat()
+            if data["notified"].get("revision") != hoy_s:
+                notify("📊 Mi Dinero — revisión semanal",
+                       "15 min: compara tu saldo con el banco, revisa gastos de la semana y lo que vence. ¡Domingo de control!")
+                data["notified"]["revision"] = hoy_s
+                changed = True
+
+        # alerta de inactividad: 5 días sin que el usuario registre nada
+        last_update = data.get("lastUserUpdate") or os.path.getmtime(DATA_FILE)
+        days_idle = (time.time() - last_update) / 86400
+        if days_idle >= 5:
+            hoy = today.isoformat()
+            if data["notified"].get("inactividad") != hoy:
+                notify("💰 Mi Dinero — ¿sigues ahí?",
+                       "Llevas {} días sin registrar movimientos. ¡Abre la app y ponte al día en 2 minutos!".format(int(days_idle)))
+                data["notified"]["inactividad"] = hoy
+                changed = True
+
+        if changed:
+            save_data(data)
+
+
+def actualizar_oro():
+    """Actualiza el valor del oro una vez al día con el precio spot (gold-api + frankfurter)."""
+    with LOCK:
+        data = load_data()
+        oro = next((a for a in data.get("assets", []) if a.get("id") == "oro"), None)
+        if not oro or oro.get("lastPriceUpdate") == date.today().isoformat():
+            return
+    try:
+        import urllib.request
+        def get_json(url):
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (MiDinero)"})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                return json.load(r)
+        precio_usd = get_json("https://api.gold-api.com/price/XAU")["price"]
+        usdcad = get_json("https://api.frankfurter.dev/v1/latest?base=USD&symbols=CAD")["rates"]["CAD"]
+        precio_cad = precio_usd * usdcad
+    except Exception as e:
+        print("oro error:", e, file=sys.stderr)
+        return
+    with LOCK:
+        data = load_data()
+        oro = next((a for a in data.get("assets", []) if a.get("id") == "oro"), None)
+        if not oro:
+            return
+        if "ounces" not in oro:
+            # calibración inicial: onzas de oro puro equivalentes al valor declarado
+            oro["ounces"] = round(oro["value"] / precio_cad, 6)
+        oro["value"] = round(oro["ounces"] * precio_cad, 2)
+        oro["pricePerOzCAD"] = round(precio_cad, 2)
+        oro["lastPriceUpdate"] = date.today().isoformat()
+        save_data(data)
+        print("oro actualizado: ${:,.2f} (spot ${:,.2f}/oz CAD)".format(oro["value"], precio_cad))
+
+
+def reminder_loop():
+    time.sleep(15)  # dejar que el sistema arranque
+    while True:
+        try:
+            check_reminders()
+        except Exception as e:
+            print("reminder error:", e, file=sys.stderr)
+        try:
+            actualizar_oro()
+        except Exception as e:
+            print("oro error:", e, file=sys.stderr)
+        time.sleep(3600)  # cada hora
+
+
+class Handler(BaseHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
+
+    def _send(self, code, body, ctype="application/json; charset=utf-8"):
+        raw = body.encode("utf-8") if isinstance(body, str) else body
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(raw)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def _authed(self):
+        return self.headers.get("X-Auth", "") in TOKENS
+
+    def do_GET(self):
+        if self.path in ("/", "/index.html"):
+            with open(INDEX_FILE, "rb") as f:
+                self._send(200, f.read(), "text/html; charset=utf-8")
+        elif self.path == "/api/data":
+            if not self._authed():
+                self._send(401, '{"error":"pin requerido"}')
+                return
+            with LOCK:
+                self._send(200, json.dumps(load_data(), ensure_ascii=False))
+        elif self.path == "/api/ping":
+            self._send(200, '{"ok":true}')
+        elif self.path == "/icon.png":
+            icon = os.path.join(BASE, "icon.png")
+            if os.path.exists(icon):
+                with open(icon, "rb") as f:
+                    self._send(200, f.read(), "image/png")
+            else:
+                self._send(404, '{"error":"not found"}')
+elif self.path == "/api/plaid-sync":
+            if not self._authed():
+                self._send(401, '{"error":"pin requerido"}')
+                return
+            added = sync_plaid_mock()
+            self._send(200, '{"ok":true,"added":'+str(added)+',"message":"Se sincronizaron '+str(added)+' transacciones de TD"}', "application/json; charset=utf-8")
+        else:
+            self._send(404, '{"error":"not found"}')
+
+    def do_POST(self):
+        if self.path == "/api/login":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+            except Exception:
+                body = {}
+            if str(body.get("pin", "")) == PIN:
+                token = secrets.token_hex(16)
+                TOKENS.add(token)
+                self._send(200, json.dumps({"token": token}))
+            else:
+                time.sleep(1.5)  # frenar intentos de adivinar el PIN
+                self._send(403, '{"error":"pin incorrecto"}')
+        elif self.path == "/api/data":
+            if not self._authed():
+                self._send(401, '{"error":"pin requerido"}')
+                return
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                incoming = json.loads(self.rfile.read(length).decode("utf-8"))
+            except Exception:
+                self._send(400, '{"error":"json inválido"}')
+                return
+            incoming["lastUserUpdate"] = time.time()  # marca de actividad del usuario
+            with LOCK:
+                save_data(incoming)
+            self._send(200, '{"ok":true}')
+        elif self.path == "/api/quick-add":
+            # registro rápido desde Atajos de iPhone: {pin, tipo, monto, categoria?, fuente?, nota?}
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+            except Exception:
+                self._send(400, '{"error":"json inválido"}')
+                return
+            if str(body.get("pin", "")) != PIN:
+                time.sleep(1.5)
+                self._send(403, json.dumps({"mensaje": "PIN incorrecto"}, ensure_ascii=False))
+                return
+            try:
+                monto = round(float(str(body.get("monto", "")).replace(",", ".").replace("$", "")), 2)
+            except Exception:
+                monto = 0
+            if not monto or monto <= 0:
+                self._send(400, json.dumps({"mensaje": "Monto inválido"}, ensure_ascii=False))
+                return
+            tipo = str(body.get("tipo", "gasto")).lower()
+            hoy = date.today().isoformat()
+            mid = format(int(time.time() * 1000), "x")
+            with LOCK:
+                data = load_data()
+                if tipo == "ingreso":
+                    pct = float(data["config"].get("savingsPercent", 0))
+                    ahorro = round(monto * pct / 100, 2)
+                    data["incomes"].append({"id": mid, "date": hoy, "amount": monto,
+                                            "source": body.get("fuente", "Rápido"),
+                                            "note": body.get("nota", ""), "saved": ahorro})
+                    data["savingsBalance"] = round(data.get("savingsBalance", 0) + ahorro, 2)
+                    if isinstance(data.get("accountBalance"), (int, float)):
+                        data["accountBalance"] = round(data["accountBalance"] + monto, 2)
+                    msg = "Ingreso de ${:,.2f} registrado ({:,.2f} a ahorro). Disponible: ${:,.2f}".format(
+                        monto, ahorro, data.get("accountBalance", 0))
+                else:
+                    data["expenses"].append({"id": mid, "date": hoy, "amount": monto,
+                                             "category": body.get("categoria", "Otro"),
+                                             "note": body.get("nota", "")})
+                    if isinstance(data.get("accountBalance"), (int, float)):
+                        data["accountBalance"] = round(data["accountBalance"] - monto, 2)
+                    msg = "Gasto de ${:,.2f} registrado ({}). Disponible: ${:,.2f}".format(
+                        monto, body.get("categoria", "Otro"), data.get("accountBalance", 0))
+                data["lastUserUpdate"] = time.time()
+                save_data(data)
+            self._send(200, json.dumps({"mensaje": msg}, ensure_ascii=False))
+        elif self.path == "/api/test-notification":
+            if not self._authed():
+                self._send(401, '{"error":"pin requerido"}')
+                return
+            notify("💰 Mi Dinero", "¡Las notificaciones funcionan! Te avisaré de tus pagos.")
+            self._send(200, '{"ok":true}')
+elif self.path == "/api/plaid-sync":
+            if not self._authed():
+                self._send(401, '{"error":"pin requerido"}')
+                return
+            added = sync_plaid_mock()
+            self._send(200, '{"ok":true,"added":'+str(added)+',"message":"Se sincronizaron '+str(added)+' transacciones de TD"}', "application/json; charset=utf-8")
+        else:
+            self._send(404, '{"error":"not found"}')
+
+
+def main():
+    threading.Thread(target=reminder_loop, daemon=True).start()
+    # 0.0.0.0: accesible desde el iPhone en la misma red Wi-Fi (autorizado por Thomas; protegido con PIN)
+    server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
+    if "--open" in sys.argv:
+        threading.Thread(
+            target=lambda: (time.sleep(1), subprocess.run(["open", "http://127.0.0.1:%d" % PORT])),
+            daemon=True,
+        ).start()
+    print("Mi Dinero corriendo en http://127.0.0.1:%d" % PORT)
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
+
+def sync_plaid_mock():
+    """
+    Simula sincronización con Plaid/TD.
+    En producción, usaría credenciales reales de Plaid.
+    """
+    data = load_data()
+    
+    # Transacciones mock de TD (últimos 30 días)
+    mock_transactions = [
+        {"date": "2026-10-02", "description": "STARBUCKS COFFEE #1234", "amount": 6.45, "category": "Restaurantes"},
+        {"date": "2026-10-02", "description": "WALMART SUPERSTORE #5678", "amount": 87.32, "category": "Comida"},
+        {"date": "2026-10-03", "description": "SHELL GAS STATION", "amount": 65.00, "category": "Transporte"},
+        {"date": "2026-10-04", "description": "SPOTIFY SUBSCRIPTION", "amount": 11.99, "category": "Suscripciones"},
+        {"date": "2026-10-05", "description": "AMAZON.CA PURCHASE", "amount": 124.50, "category": "Compras"},
+        {"date": "2026-10-06", "description": "TIM HORTONS", "amount": 4.87, "category": "Restaurantes"},
+    ]
+    
+    # Evitar duplicados
+    existing_notes = set(e.get("note", "") for e in data.get("expenses", []))
+    
+    added = 0
+    for t in mock_transactions:
+        if t["description"] not in existing_notes:
+            data["expenses"].append({
+                "id": uid(),
+                "date": t["date"],
+                "amount": t["amount"],
+                "category": t["category"],
+                "note": t["description"],
+                "imported": True,
+                "source": "Plaid/TD",
+                "cash": False
+            })
+            existing_notes.add(t["description"])
+            added += 1
+    
+    if added > 0:
+        save_data(data)
+    return added
+

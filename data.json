@@ -1,0 +1,268 @@
+{
+  "config": {
+    "currency": "CAD",
+    "savingsPercent": 20,
+    "payDays": [
+      15,
+      30
+    ],
+    "notifyDaysBefore": 3,
+    "expectedIncome": 4050,
+    "debtPct": 15
+  },
+  "incomes": [
+    {
+      "id": "sep15pay",
+      "date": "2026-09-15",
+      "amount": 3000,
+      "source": "Spirit of Math",
+      "note": "Septiembre quincena 2",
+      "saved": 600
+    },
+    {
+      "id": "oct1pay",
+      "date": "2026-10-01",
+      "amount": 3000,
+      "source": "Spirit of Math",
+      "note": "Octubre quincena 1 (transferencia a Isabella renta)",
+      "saved": 600
+    },
+    {
+      "id": "oct_parttime",
+      "date": "2026-10-03",
+      "amount": 500,
+      "source": "Campus Living",
+      "note": "Part-time octubre",
+      "saved": 100
+    }
+  ],
+  "expenses": [
+    {
+      "id": "mtg74zbd9lbf",
+      "date": "2026-08-30",
+      "amount": 260,
+      "category": "Deudas",
+      "note": "Pago CIBC Costco Mastercard"
+    },
+    {
+      "id": "herm60",
+      "date": "2026-08-30",
+      "amount": 85.25,
+      "category": "Familia",
+      "note": "Hermana (60 USD)"
+    },
+    {
+      "id": "1a0549d89b2",
+      "date": "2026-08-30",
+      "amount": 4.27,
+      "category": "Otro",
+      "note": ""
+    },
+    {
+      "id": "mudanza_split",
+      "date": "2026-08-30",
+      "amount": 530,
+      "category": "Mudanza",
+      "note": "Mudanza (tu mitad de $1,059.94, mamá Isabella pagó otra mitad)"
+    },
+    {
+      "id": "mtqe5v144ean",
+      "date": "2026-09-06",
+      "amount": 183.6,
+      "category": "Deudas",
+      "note": "Pago CIBC Costco Mastercard",
+      "cash": false
+    },
+    {
+      "id": "oct_comida",
+      "date": "2026-10-15",
+      "amount": 300,
+      "category": "Comida",
+      "note": "Gastos comida octubre"
+    },
+    {
+      "id": "oct_gasolina",
+      "date": "2026-10-15",
+      "amount": 140,
+      "category": "Transporte",
+      "note": "Gasolina octubre"
+    },
+    {
+      "id": "oct_seguro_carro",
+      "date": "2026-10-15",
+      "amount": 148,
+      "category": "Transporte",
+      "note": "Seguro de carro (Isabella)"
+    }
+  ],
+  "bills": [
+    {
+      "id": "renta",
+      "name": "Renta (tu mitad de $2,300)",
+      "amount": 1150,
+      "dueDay": 1,
+      "category": "Renta/Vivienda",
+      "paidPeriod": "2026-10"
+    },
+    {
+      "id": "wifi_bell",
+      "name": "WiFi Bell",
+      "amount": 57.00,
+      "dueDay": 7,
+      "category": "Servicios",
+      "paidPeriod": null
+    },
+    {
+      "id": "bell",
+      "name": "Bell Telefonía",
+      "amount": 57.63,
+      "dueDay": 13,
+      "category": "Servicios",
+      "paidPeriod": null
+    },
+    {
+      "id": "affirm_apple",
+      "name": "Affirm Apple",
+      "amount": 72.88,
+      "dueDay": 17,
+      "category": "Deudas",
+      "paidPeriod": null
+    },
+    {
+      "id": "affirm_amazon",
+      "name": "Affirm Amazon",
+      "amount": 125.10,
+      "dueDay": 25,
+      "category": "Deudas",
+      "paidPeriod": null
+    },
+    {
+      "id": "seguro",
+      "name": "Seguro carro (novia) 40%",
+      "amount": 148,
+      "dueDay": 30,
+      "category": "Transporte",
+      "paidPeriod": "2026-08"
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "amount": 7.22,
+      "dueDay": 2,
+      "category": "Suscripciones",
+      "paidPeriod": "2026-10"
+    },
+    {
+      "id": "apple",
+      "name": "Claude (via Apple)",
+      "amount": 31.64,
+      "dueDay": 24,
+      "category": "Suscripciones",
+      "paidPeriod": "2026-08"
+    },
+    {
+      "id": "cibc_min",
+      "name": "CIBC Mínimo Pago",
+      "amount": 45.00,
+      "dueDay": 16,
+      "category": "Deudas",
+      "paidPeriod": null
+    },
+    {
+      "id": "metergy",
+      "name": "Metergy (utilities)",
+      "amount": 75,
+      "dueDay": 1,
+      "category": "Servicios",
+      "paidPeriod": "2026-10"
+    },
+    {
+      "id": "tenantins",
+      "name": "Tenant Insurance (Security Nation)",
+      "amount": 39.15,
+      "dueDay": 1,
+      "category": "Renta/Vivienda",
+      "paidPeriod": "2026-10"
+    }
+  ],
+  "debts": [
+    {
+      "id": "cibc",
+      "type": "tarjeta",
+      "name": "CIBC Costco Mastercard",
+      "balance": 1455.86,
+      "minPayment": 100,
+      "dueDay": 16,
+      "paidPeriod": "2026-10",
+      "apr": 20.75
+    },
+    {
+      "id": "tdvisa",
+      "type": "tarjeta",
+      "name": "TD Low Rate Visa",
+      "balance": 3408.45,
+      "minPayment": 100,
+      "dueDay": 23,
+      "paidPeriod": null,
+      "apr": 12.99
+    }
+  ],
+  "goals": [
+    {
+      "id": "emergencia",
+      "name": "Fondo de Emergencia",
+      "target": 3000,
+      "saved": 0
+    },
+    {
+      "id": "viajes",
+      "name": "Viajes / Futuro",
+      "target": 1000,
+      "saved": 0
+    },
+    {
+      "id": "regalos",
+      "name": "Regalos Diciembre",
+      "target": 800,
+      "saved": 0
+    }
+  ],
+  "savingsBalance": 0,
+  "notified": {
+    "bill-renta": "2026-10-01",
+    "bill-metergy": "2026-10-01",
+    "bill-tenantins": "2026-10-01",
+    "revision": "2026-09-27",
+    "bill-spotify": "2026-10-04",
+    "inactividad": "2026-10-03",
+    "bill-bell": "2026-09-12",
+    "debt-tdvisa": "2026-09-21",
+    "bill-apple": "2026-09-24",
+    "bill-affirm": "2026-09-27",
+    "bill-seguro": "2026-09-30"
+  },
+  "accountBalance": 660.00,
+  "savingsBalance": 3527.55,
+  "lastUserUpdate": 1727961600,
+  "assets": [
+    {
+      "id": "oro",
+      "name": "Oro 18k (50.15g)",
+      "value": 7132.18,
+      "grams": 50.15,
+      "karat": 18,
+      "ounces": 1.209269,
+      "pricePerOzCAD": 5897.92,
+      "lastPriceUpdate": "2026-10-03"
+    }
+  ],
+  "budgetPct": {
+    "Comida": 8,
+    "Transporte": 4,
+    "Restaurantes": 2,
+    "Ropa": 1,
+    "Cuidado personal": 1,
+    "Ocio": 1,
+    "Regalos": 5
+  }
+}
