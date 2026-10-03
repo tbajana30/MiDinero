@@ -18,7 +18,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 BASE = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE, "data.json")
 INDEX_FILE = os.path.join(BASE, "index.html")
-PORT = 9000
+PORT = int(os.environ.get("PORT", 9000))
 LOCK = threading.Lock()
 PIN = "3012"
 TOKENS = set()  # tokens de sesión válidos (se reinician al reiniciar el servidor)
